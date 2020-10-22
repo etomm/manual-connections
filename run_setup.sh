@@ -128,12 +128,12 @@ Custom latency (no input required for 50ms): "
 read customLatency
 echo
 
-MAX_LATENCY=0.05
+PIA_MAX_LATENCY=0.05
 if [[ $customLatency != "" ]]; then
-  MAX_LATENCY=$customLatency
+  PIA_MAX_LATENCY=$customLatency
 fi
-export MAX_LATENCY
-echo "MAX_LATENCY=\"$MAX_LATENCY\"
+export PIA_MAX_LATENCY
+echo "PIA_MAX_LATENCY=\"$PIA_MAX_LATENCY\"
 "
 
 echo "Having active IPv6 connections might compromise security by allowing"

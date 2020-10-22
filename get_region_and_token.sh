@@ -36,10 +36,10 @@ check_tool jq jq
 
 # This allows you to set the maximum allowed latency in seconds.
 # All servers that respond slower than this will be ignored.
-# You can inject this with the environment variable MAX_LATENCY.
+# You can inject this with the environment variable PIA_MAX_LATENCY.
 # The default value is 50 milliseconds.
-MAX_LATENCY=${MAX_LATENCY:-0.05}
-export MAX_LATENCY
+PIA_MAX_LATENCY=${PIA_MAX_LATENCY:-0.05}
+export PIA_MAX_LATENCY
 
 serverlist_url='https://serverlist.piaservers.net/vpninfo/servers/v4'
 
@@ -52,7 +52,7 @@ printServerLatency() {
   regionName="$(echo ${@:3} |
     sed 's/ false//' | sed 's/true/(geo)/')"
   time=$(LC_NUMERIC=en_US.utf8 curl -o /dev/null -s \
-    --connect-timeout $MAX_LATENCY \
+    --connect-timeout $PIA_MAX_LATENCY \
     --write-out "%{time_connect}" \
     http://$serverIP:443)
   if [ $? -eq 0 ]; then
@@ -91,7 +91,7 @@ if [[ ! $PIA_REGION ]]; then
       .servers.meta[0].ip+" "+.id+" "+.name+" "+(.geo|tostring)' )"
   fi
   echo Testing regions that respond \
-    faster than $MAX_LATENCY seconds:
+    faster than $PIA_MAX_LATENCY seconds:
   bestRegion="$(echo "$summarized_region_data" |
     xargs -I{} bash -c 'printServerLatency {}' |
     sort | head -1 | awk '{ print $2 }')"
@@ -101,9 +101,9 @@ fi
 
 if [ -z "$bestRegion" ]; then
   echo ...
-  echo No region responded within ${MAX_LATENCY}s, consider using a higher timeout.
-  echo For example, to wait 1 second for each region, inject MAX_LATENCY=1 like this:
-  echo $ MAX_LATENCY=1 ./get_region_and_token.sh
+  echo No region responded within ${PIA_MAX_LATENCY}s, consider using a higher timeout.
+  echo For example, to wait 1 second for each region, inject PIA_MAX_LATENCY=1 like this:
+  echo $ PIA_MAX_LATENCY=1 ./get_region_and_token.sh
   exit 1
 fi
 
