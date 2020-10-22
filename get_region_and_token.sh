@@ -76,24 +76,28 @@ fi
 # Notify the user that we got the server list.
 echo "OK!"
 
-# Test one server from each region to get the closest region.
-# If port forwarding is enabled, filter out regions that don't support it.
-if [[ $PIA_PF == "true" ]]; then
-  echo Port Forwarding is enabled, so regions that do not support
-  echo port forwarding will get filtered out.
-  summarized_region_data="$( echo $all_region_data |
-    jq -r '.regions[] | select(.port_forward==true) |
-    .servers.meta[0].ip+" "+.id+" "+.name+" "+(.geo|tostring)' )"
+if [[ ! $PIA_REGION ]]; then
+  # Test one server from each region to get the closest region.
+  # If port forwarding is enabled, filter out regions that don't support it.
+  if [[ $PIA_PF == "true" ]]; then
+    echo Port Forwarding is enabled, so regions that do not support
+    echo port forwarding will get filtered out.
+    summarized_region_data="$( echo $all_region_data |
+      jq -r '.regions[] | select(.port_forward==true) |
+      .servers.meta[0].ip+" "+.id+" "+.name+" "+(.geo|tostring)' )"
+  else
+    summarized_region_data="$( echo $all_region_data |
+      jq -r '.regions[] |
+      .servers.meta[0].ip+" "+.id+" "+.name+" "+(.geo|tostring)' )"
+  fi
+  echo Testing regions that respond \
+    faster than $MAX_LATENCY seconds:
+  bestRegion="$(echo "$summarized_region_data" |
+    xargs -I{} bash -c 'printServerLatency {}' |
+    sort | head -1 | awk '{ print $2 }')"
 else
-  summarized_region_data="$( echo $all_region_data |
-    jq -r '.regions[] |
-    .servers.meta[0].ip+" "+.id+" "+.name+" "+(.geo|tostring)' )"
+  bestRegion=$PIA_REGION
 fi
-echo Testing regions that respond \
-  faster than $MAX_LATENCY seconds:
-bestRegion="$(echo "$summarized_region_data" |
-  xargs -I{} bash -c 'printServerLatency {}' |
-  sort | head -1 | awk '{ print $2 }')"
 
 if [ -z "$bestRegion" ]; then
   echo ...
